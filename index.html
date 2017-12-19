@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <script src="js/jquery.min.js"></script>
+    <style type="text/css">
+        .flexcontainer {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        #Pop-Chart {
+            box-sizing: border-box;
+            float: left;
+        }
+
+        #Part-Chart {
+            box-sizing: border-box;
+            float: left;
+        }
+
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+
+        .arc path {
+            stroke: #fff;
+        }
+
+        rect {
+            stroke-width: 2;
+        }
+
+
+    </style>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+</head>
+<body>
+
+<div class="flexcontainer">
+    <div id="Pop-Chart"></div>
+    <div id="Part-Chart"></div>
+    <div id="Info-Chart"></div>
+</div>
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="js/main.js"></script>
+<script>
+    var pop = (sendInfos("population"))[0]['Population'];
+    var part = (sendInfos("Partei"))[0];
+    console.log(part);
+
+
+    var width1 = 500,
+        height1 = 500,
+        radius1 = Math.min(width1, height1) / 2;
+
+    var color1= d3.scale.ordinal()
+        .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00", "#89edd9"]);
+
+    var arc1 = d3.svg.arc()
+        .outerRadius(radius1)
+        .innerRadius(radius1 - 80);
+
+    var pie1 = d3.layout.pie()
+        .sort(null)
+        .value(function(d) { return d.value; });
+
+    var svg1 = d3.select("#Pop-Chart")
+        .append("svg")
+        .attr("width", width1)
+        .attr("height", height1)
+        .append("g")
+        .attr("transform", "translate(" + width1 / 2 + "," + height1 / 2 + ")")
+        .attr("id", "Pop-Chart");
+
+    d3.json("php/Popchart.php", function(error, data) {
+        if (error) throw error;
+
+        data.forEach(function(d) {
+            d.name = d.name;
+            d.value = +d.value;
+        });
+
+        var g = svg1.selectAll(".arc")
+            .data(pie1(data))
+            .enter().append("g")
+            .attr("class", "arc");
+
+        g.append("path")
+            .attr("d", arc1)
+            .style("fill", function(d) { return color1(d.data.name); });
+
+        g.append("text")
+            .attr("transform", function(d) { return "translate(" + arc1.centroid(d) + ")"; })
+            .attr("dy", ".35em")
+            .text(function(d) { return d.data.name})
+            .attr("x", -50)
+            .attr("y", -5);
+
+        g.append("text")
+            .attr("transform", function(d) { return "translate(" + arc1.centroid(d) + ")"; })
+            .attr("dy", ".35em")
+            .text(function(d) { return d.data.value + "%"})
+            .attr("x", -10)
+            .attr("y", 15);
+        g.append("text")
+            .attr("transform", function(d) { return "translate(" + arc1.centroid(d) + ")"; })
+            .attr("dy", ".35em")
+            .text(function(d) { return Math.round(pop / 100 * d.data.value)})
+            .attr("x", -10)
+            .attr("y", 35);
+
+        g.append("text")
+            .attr("text-anchor", "middle")
+            .attr('font-size', '2em')
+            .attr('y', -10)
+            .text("Einwohnerzahl");
+
+        g.append("text")
+            .attr("text-anchor", "middle")
+            .attr('font-size', '2em')
+            .attr('y', 50)
+            .text(pop);
+    });
+    //Donut-diagramm der Parteien in Kanton Thurgau
+
+    var width2 = 500,
+        height2 = 500,
+        radius2 = Math.min(width2, height2) / 2;
+
+    var color2 = d3.scale.ordinal()
+        .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00", "#89edd9", "#f3f3f3"]);
+
+    var arc2 = d3.svg.arc()
+        .outerRadius(radius2)
+        .innerRadius(radius2 - 70);
+
+    var pie2 = d3.layout.pie()
+        .sort(null)
+        .value(function(d) { return d.value; });
+
+    var svg2 = d3.select("#Part-Chart").append("svg")
+        .attr("width", width2)
+        .attr("height", height2)
+        .append("g")
+        .attr("transform", "translate(" + width2 / 2 + "," + height2 / 2 + ")")
+        .attr("id", "Part-Chart");
+
+
+    d3.json("php/Partchart.php", function(error, data) {
+        if (error) throw error;
+
+        data.forEach(function(d) {
+            d.name = d.name;
+            d.value = +d.value;
+        });
+
+        var g = svg2.selectAll(".arc")
+            .data(pie2(data))
+            .enter().append("g")
+            .attr("class", "arc");
+
+        g.append("path")
+            .attr("d", arc2)
+            .style("fill", function(d) { return color2(d.data.name); });
+
+        g.append("text")
+            .attr("transform", function(d) { return "translate(" + arc2.centroid(d) + ")"; })
+            .attr("dy", ".35em")
+            .text(function(d) { return d.data.name})
+            .attr("x", -13)
+            .attr("y", -5);
+
+        g.append("text")
+            .attr("transform", function(d) { return "translate(" + arc2.centroid(d) + ")"; })
+            .attr("dy", ".35em")
+            .text(function(d) { return d.data.value + "%"})
+            .attr("x", -13)
+            .attr("y", 15);
+
+        g.append("text")
+            .attr("text-anchor", "middle")
+            .attr('font-size', '2em')
+            .attr('y', -10)
+            .text("Stärkste Partei");
+
+        g.append("text")
+            .attr("text-anchor", "middle")
+            .attr('font-size', '2em')
+            .attr('y', 50)
+            .text(part['Partei'] + " mit " + part['Pro'] + "%");
+    });
+</script>
+
+<div class="pict">
+
+</div>
+</body>
+</html>
+
